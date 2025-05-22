@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient QR Codes{% endblock %}
+
+{% block content %}
+<style>
+    .status-waiting {
+        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        color: #ffffff !important;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-weight: bold;
+    }
+    .status-reception {
+        background: linear-gradient(45deg, #ffd93d, #ffeb3d);
+        color: #000000 !important;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-weight: bold;
+    }
+    .status-done {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        color: #ffffff !important;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-weight: bold;
+    }
+    /* Style for the select options */
+    select[name="report_status"] option {
+        padding: 10px;
+    }
+    select[name="report_status"] option[value="Waiting"] {
+        background-color: #ff6b6b;
+        color: white;
+    }
+    select[name="report_status"] option[value="Reception"] {
+        background-color: #ffd93d;
+        color: black;
+    }
+    select[name="report_status"] option[value="Done"] {
+        background-color: #4CAF50;
+        color: white;
+    }
+    /* Rest of your existing styles */
+    .btn-primary {
+        background: linear-gradient(45deg, #2196F3, #1976D2);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #1976D2, #1565C0);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .qr-code {
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .qr-code:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    .table {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .table thead th {
+        background: linear-gradient(45deg, #2196F3, #1976D2);
+        color: white;
+        border: none;
+    }
+    .form-select {
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    .form-select:focus {
+        box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+    }
+    .alert {
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .filter-section {
+        background: linear-gradient(45deg, #f5f5f5, #e0e0e0);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .date-time {
+        font-size: 0.9em;
+        color: #666;
+    }
+    .filter-btn {
+        background: linear-gradient(45deg, #2196F3, #1976D2);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    .filter-btn:hover {
+        background: linear-gradient(45deg, #1976D2, #1565C0);
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="card">
+    <div class="card-header bg-success text-white" style="background: linear-gradient(45deg, #2e7d32, #43a047);">
+        <h4 class="mb-0">Patient QR Codes</h4>
+    </div>
+    <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="GET" action="{{ url_for('qrs') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label for="date_filter" class="form-label">Filter by Date</label>
+                    <input type="date" class="form-control" id="date_filter" name="date_filter" value="{{ request.args.get('date_filter', '') }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="status_filter" class="form-label">Filter by Status</label>
+                    <select class="form-select" id="status_filter" name="status_filter">
+                        <option value="">All Statuses</option>
+                        <option value="Waiting" {% if request.args.get('status_filter') == 'Waiting' %}selected{% endif %}>Waiting</option>
+                        <option value="Reception" {% if request.args.get('status_filter') == 'Reception' %}selected{% endif %}>Reception</option>
+                        <option value="Done" {% if request.args.get('status_filter') == 'Done' %}selected{% endif %}>Done</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn filter-btn">Apply Filters</button>
+                    <a href="{{ url_for('qrs') }}" class="btn btn-secondary ms-2">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+        
+        {% if patients %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Report Type</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date & Time</th>
+                        <th>QR Code</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in patients %}
+                    <tr>
+                        <td>{{ patient.name }}</td>
+                        <td>{{ patient.age or 'N/A' }}</td>
+                        <td>{{ patient.report_type or 'N/A' }}</td>
+                        <td>{{ patient.amount or 'N/A' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('update_status', id=patient._id) }}" class="d-flex align-items-center">
+                                <select name="report_status" 
+                                        class="form-select form-select-sm me-2 status-{{ patient.report_status|lower }}" 
+                                        onchange="this.form.submit()"
+                                        style="min-width: 120px;">
+                                    <option value="Waiting" {% if patient.report_status == 'Waiting' %}selected{% endif %}>Waiting</option>
+                                    <option value="Reception" {% if patient.report_status == 'Reception' %}selected{% endif %}>Reception</option>
+                                    <option value="Done" {% if patient.report_status == 'Done' %}selected{% endif %}>Done</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td class="date-time">
+                            {{ patient.formatted_date or 'N/A' }}
+                        </td>
+                        <td>
+                            <img src="data:image/png;base64,{{ patient.qr_code }}" alt="QR Code" class="qr-code">
+                            <div class="mt-2">
+                                <a href="{{ url_for('patient_detail', id=patient._id) }}" class="btn btn-sm btn-primary" target="_blank">View Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            No patients found matching the filters.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update select background color based on selected value
+    const statusSelects = document.querySelectorAll('select[name="report_status"]');
+    statusSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.className = `form-select form-select-sm me-2 status-${this.value.toLowerCase()}`;
+        });
+    });
+});
+</script>
+{% endblock %}

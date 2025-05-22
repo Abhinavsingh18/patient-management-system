@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Registration Form{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Patient Registration Form</h4>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label for="name" class="form-label">Patient Name *</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="age" class="form-label">Patient Age</label>
+                <input type="number" class="form-control" id="age" name="age">
+            </div>
+            <div class="mb-3">
+                <label for="report_type" class="form-label">Report Type</label>
+                <input type="text" class="form-control" id="report_type" name="report_type" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone_number" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="phone_number" name="phone_number" required>
+            </div>
+            <div class="mb-3">
+                <label for="appointment_date" class="form-label">Appointment Date & Time</label>
+                <input type="datetime-local" 
+                       class="form-control" 
+                       id="appointment_date" 
+                       name="appointment_date" 
+                       required
+                       min="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+                       value="{{ now.strftime('%Y-%m-%dT%H:%M') }}">
+            </div>
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount</label>
+                <input type="number" class="form-control" id="amount" name="amount">
+            </div>
+            <button type="submit" class="btn btn-primary">Register Patient</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

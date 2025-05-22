@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Admin User{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Add Admin User</h4>
+    </div>
+    <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="post" action="{{ url_for('add_admin') }}">
+            <div class="mb-3">
+                <label for="user_id" class="form-label">Admin User ID</label>
+                <input type="text" class="form-control" id="user_id" name="user_id" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Admin Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="mb-3">
+                <label for="access_type" class="form-label">Access Type</label>
+                <select class="form-select" id="access_type" name="access_type" required>
+                    <option value="">Select Access Type</option>
+                    <option value="form">Form Access</option>
+                    <option value="qrs">QR Access</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="linked_users" class="form-label">Linked Form Users (for QR access only)</label>
+                <input type="text" class="form-control" id="linked_users" name="linked_users" placeholder="Enter form user IDs separated by commas (e.g., user1,user2)">
+                <small class="form-text text-muted">Only required for QR access users. Enter the user IDs of form users whose data this QR user should see.</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Admin</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+        </form>
+    </div>
+</div>
+{% endblock %} 
